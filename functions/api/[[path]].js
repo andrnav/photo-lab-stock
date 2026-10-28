@@ -56,7 +56,13 @@ async function handler(request, env) {
   const method = request.method.toUpperCase();
 
   if (path === "login" && method === "POST") {
-    if (!env.APP_PASSWORD || !env.SESSION_SECRET) return json({ error: "Serverio paslaptis nesukonfigūruota. Patikrinkite Cloudflare nustatymus." }, 500);
+    if (!env.APP_PASSWORD || !env.SESSION_SECRET) {
+  return json({
+    error: "Trūksta serverio konfigūracijos.",
+    appPasswordConfigured: Boolean(env.APP_PASSWORD),
+    sessionSecretConfigured: Boolean(env.SESSION_SECRET)
+  }, 500);
+}
     const body = await readJson(request);
     if (!body || typeof body.password !== "string") return json({ error: "Įveskite slaptažodį." }, 400);
     if (body.password !== env.APP_PASSWORD) return json({ error: "Neteisingas slaptažodis." }, 401);
