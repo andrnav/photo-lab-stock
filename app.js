@@ -92,11 +92,11 @@ function rowHtml(item) {
     : `<span class="muted">Tik peržiūra</span>`;
   const color = ["green","pink","blue","yellow","purple"].includes(item.color) ? `<span class="color-dot ${escapeHtml(item.color)}" title="${escapeHtml(colorName(item.color))}"></span>` : "";
   return `<tr>
+    <td><span class="name-with-color">${color}<button type="button" class="product-name-copy" data-copy-code="${escapeHtml(item.id)}" title="Paspauskite, kad nukopijuotumėte prekės kodą">${escapeHtml(item.name)}</button></span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
     <td>${item.product_code ? `<button type="button" class="product-code copy-code-btn" data-copy-code="${escapeHtml(item.id)}" title="Paspauskite, kad nukopijuotumėte prekės kodą">${escapeHtml(item.product_code)}</button>` : `<span class="muted">—</span>`}</td>
+    <td><span class="qty">${num(item.quantity)} <small>${escapeHtml(item.unit)}</small></span></td>
     <td><span class="badge ${low ? "low" : "ok"}">${low ? "Užsakyti" : "Pakanka"}</span></td>
     <td>${num(item.min_quantity)} <small>${escapeHtml(item.unit)}</small></td>
-    <td><span class="qty">${num(item.quantity)} <small>${escapeHtml(item.unit)}</small></span></td>
-    <td><span class="name-with-color">${color}<button type="button" class="product-name-copy" data-copy-code="${escapeHtml(item.id)}" title="Paspauskite, kad nukopijuotumėte prekės kodą">${escapeHtml(item.name)}</button></span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
     <td><span class="category-tag">${escapeHtml(item.category)}</span></td>
     <td>${actions}</td>
   </tr>`;

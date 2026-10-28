@@ -99,3 +99,17 @@ body[data-theme="night"] .panel, body[data-theme="night"] .stat-card {background
 .product-name-copy {border:0;background:transparent;padding:0;text-align:left;color:var(--text);font:inherit;font-weight:750;font-size:12px;cursor:pointer}
 .product-name-copy:hover {text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
 @media(max-width:650px){.stats-grid-single{grid-template-columns:1fr}.top-actions{flex-wrap:wrap}.lithuania-clock{line-height:1.5}}
+
+
+/* Layout refinements: clock above controls, compact low-stock indicator, requested inventory column order. */
+.top-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:300px}
+.top-action-buttons{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.lithuania-clock{margin:0;text-align:right;line-height:1.45}
+.stats-grid-single{display:flex;justify-content:flex-end;margin:-8px 0 16px}
+.stats-grid-single .stat-card{width:min(100%,330px);padding:12px 16px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:14px}
+.stats-grid-single .stat-top{grid-column:1;grid-row:1;justify-content:flex-start;gap:8px}
+.stats-grid-single .stat-icon{width:24px;height:24px;grid-column:2;grid-row:1 / span 2}
+.stats-grid-single .stat-card>strong{grid-column:1;grid-row:2;font-size:24px;margin:3px 0 0}
+.stats-grid-single .stat-card>small{grid-column:1 / -1;margin-top:4px}
+@media(max-width:900px){.top-actions{min-width:0}.top-action-buttons{flex-wrap:wrap}.stats-grid-single .stat-card{width:min(100%,330px)}}
+@media(max-width:650px){.top-actions{align-items:flex-start;margin-top:12px}.lithuania-clock{text-align:left}.top-action-buttons{justify-content:flex-start}.stats-grid-single{justify-content:stretch;margin:0 0 15px}.stats-grid-single .stat-card{width:100%}}

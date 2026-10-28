@@ -31,22 +31,22 @@
     </aside>
 
     <main class="main-content">
-      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p id="lithuania-clock" class="lithuania-clock" aria-live="off">Lietuvos laikas: tikrinama…</p><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="theme-toggle" class="btn secondary" type="button" aria-label="Keisti dienos ir nakties režimą">☾ Naktis</button><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
+      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><p id="lithuania-clock" class="lithuania-clock" aria-live="off">Lietuvos laikas: tikrinama…</p><div class="top-action-buttons"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="theme-toggle" class="btn secondary" type="button" aria-label="Keisti dienos ir nakties režimą">☾ Naktis</button><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></div></header>
 
-
-      <section class="panel" id="to-order">
-        <div class="panel-heading"><div><h2>Užsakomos medžiagos</h2><p class="muted">Medžiagos, kurių likutis pasiekė minimalią ribą arba yra mažesnis.</p></div><span id="order-count" class="category-tag">0 pozicijų</span></div>
-        <div class="table-wrap"><table><thead><tr><th>PREKĖS KODAS</th><th>BŪKLĖ</th><th>MIN. LIKUTIS</th><th>LIKUTIS</th><th>PAVADINIMAS</th><th>KATEGORIJA</th><th></th></tr></thead><tbody id="order-body"><tr><td colspan="7" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
-      </section>
 
       <section class="stats-grid stats-grid-single">
         <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis · atkreipti dėmesį</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Medžiagos, kurias reikia užsakyti</small></article>
       </section>
 
+      <section class="panel" id="to-order">
+        <div class="panel-heading"><div><h2>Užsakomos medžiagos</h2><p class="muted">Medžiagos, kurių likutis pasiekė minimalią ribą arba yra mažesnis.</p></div><span id="order-count" class="category-tag">0 pozicijų</span></div>
+        <div class="table-wrap"><table><thead><tr><th>PAVADINIMAS</th><th>PREKĖS KODAS</th><th>LIKUTIS</th><th>BŪKLĖ</th><th>MIN. LIKUTIS</th><th>KATEGORIJA</th><th></th></tr></thead><tbody id="order-body"><tr><td colspan="7" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
+      </section>
+
       <section class="panel" id="inventory">
         <div class="panel-heading"><div><h2>Visos medžiagos</h2><p class="muted">Visas sandėlio sąrašas, įskaitant medžiagas, kurių likučio pakanka.</p></div><button id="add-item-btn" class="btn primary admin-only">＋ Pridėti medžiagą</button></div>
         <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="search" type="search" placeholder="Ieškoti medžiagos..."></div><select id="category-filter" aria-label="Filtruoti pagal kategoriją"><option value="">Visos kategorijos</option><option>Fotopopierius</option><option>Chemija</option><option>Eksploatacinės medžiagos</option><option>Kita</option></select></div>
-        <div class="table-wrap"><table><thead><tr><th>PREKĖS KODAS</th><th>BŪKLĖ</th><th>MIN. LIKUTIS</th><th>LIKUTIS</th><th>PAVADINIMAS</th><th>KATEGORIJA</th><th></th></tr></thead><tbody id="inventory-body"><tr><td colspan="7" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>PAVADINIMAS</th><th>PREKĖS KODAS</th><th>LIKUTIS</th><th>BŪKLĖ</th><th>MIN. LIKUTIS</th><th>KATEGORIJA</th><th></th></tr></thead><tbody id="inventory-body"><tr><td colspan="7" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
         <div class="panel-footer"><span id="table-count">0 pozicijų</span><span>Duomenys saugomi serverio duomenų bazėje</span></div>
       </section>
 
