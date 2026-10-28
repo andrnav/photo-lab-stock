@@ -8,42 +8,41 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <main id="login-screen" class="login-wrap">
-    <section class="login-card">
-      <div class="brand-mark">PL</div>
-      <p class="eyebrow">VIDINĖ SISTEMA</p>
-      <h1>Photo Lab Stock</h1>
-      <p class="muted">Prisijunkite prie bendro medžiagų sandėlio.</p>
-      <form id="login-form">
-        <label for="username">Naudotojo vardas</label>
-        <input id="username" autocomplete="username" required placeholder="admin arba darbuotojas">
-        <label for="password">Slaptažodis</label>
-        <input id="password" type="password" autocomplete="current-password" required placeholder="Įveskite slaptažodį">
-        <button class="btn primary full" type="submit">Prisijungti <span>→</span></button>
-        <p id="login-error" class="error" role="alert"></p>
-      </form>
-      <p class="tiny muted">Bandomoji versija. Nenaudokite tikrų darbo duomenų, kol nepatikrinta apsauga ir atsarginės kopijos.</p>
-    </section>
-  </main>
 
   <div id="app" class="app-shell hidden">
     <aside class="sidebar">
       <div class="brand-row"><div class="brand-mark small">PL</div><div><strong>Photo Lab</strong><small>STOCK MANAGER</small></div></div>
       <nav><a class="nav-item active" href="#inventory"><span>▦</span> Likučiai</a><a class="nav-item" href="#history"><span>↻</span> Pakeitimų istorija</a></nav>
-      <div class="sidebar-bottom"><div class="status-dot"></div><span id="user-label">Prisijungta</span><button id="logout-btn" class="text-btn">Atsijungti</button></div>
+      <div class="sidebar-bottom">
+        <div class="admin-access">
+          <div class="admin-access-title"><span class="status-dot"></span><strong id="user-label">Vieša peržiūra</strong></div>
+          <button id="admin-login-toggle" class="btn secondary full" type="button">Administratoriaus prisijungimas</button>
+          <form id="login-form" class="sidebar-login hidden">
+            <label for="username">Naudotojo vardas</label>
+            <input id="username" autocomplete="username" required value="admin" placeholder="admin">
+            <label for="password">Slaptažodis</label>
+            <input id="password" type="password" autocomplete="current-password" required placeholder="Administratoriaus slaptažodis">
+            <button class="btn primary full" type="submit">Prisijungti</button>
+            <p id="login-error" class="error" role="alert"></p>
+          </form>
+          <button id="logout-btn" class="text-btn hidden" type="button">Atsijungti</button>
+        </div>
+      </div>
     </aside>
 
     <main class="main-content">
-      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted">Vienas bendras likučių vaizdas visai komandai.</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
-      <section class="stats-grid">
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Visos pozicijos</span><span class="stat-icon">▦</span></div><strong id="stat-items">0</strong><small>Skirtingos medžiagos</small></article>
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Reikia atkreipti dėmesį</small></article>
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Bendras kiekis</span><span class="stat-icon blue">↗</span></div><strong id="stat-total">0</strong><small>Visų pozicijų kiekių suma</small></article>
-      </section>
+      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
+
 
       <section class="panel" id="to-order">
         <div class="panel-heading"><div><h2>Užsakomos medžiagos</h2><p class="muted">Medžiagos, kurių likutis pasiekė minimalią ribą arba yra mažesnis.</p></div><span id="order-count" class="category-tag">0 pozicijų</span></div>
         <div class="table-wrap"><table><thead><tr><th>MEDŽIAGA</th><th>KATEGORIJA</th><th>LIKUTIS</th><th>MIN. LIKUTIS</th><th>BŪKLĖ</th><th></th></tr></thead><tbody id="order-body"><tr><td colspan="6" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Visos pozicijos</span><span class="stat-icon">▦</span></div><strong id="stat-items">0</strong><small>Skirtingos medžiagos</small></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Reikia atkreipti dėmesį</small></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Bendras kiekis</span><span class="stat-icon blue">↗</span></div><strong id="stat-total">0</strong><small>Visų pozicijų kiekių suma</small></article>
       </section>
 
       <section class="panel" id="inventory">

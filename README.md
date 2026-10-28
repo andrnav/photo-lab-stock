@@ -4,17 +4,17 @@ Bendra foto laboratorijos medžiagų likučių aplikacija: HTML/CSS/JavaScript, 
 
 ## Kas atnaujinta
 
-- `admin` prisijungimas gali pridėti medžiagas, keisti likučius ir redaguoti minimalius likučius.
-- `darbuotojas` prisijungimas gali tik peržiūrėti likučius ir pakeitimų istoriją. API tikrina teises serverio pusėje.
+- Lankytojai iškart mato likučius ir pakeitimų istoriją be prisijungimo.
+- Tik `admin` turi prisijungti, kad galėtų pridėti medžiagas, keisti likučius ir redaguoti minimalius likučius. API tikrina teises serverio pusėje.
 - „Užsakomos medžiagos“ visada rodoma viršuje; joje rodomos pozicijos, kurių kiekis yra lygus minimaliam arba mažesnis. Jei tokių nėra, rodoma „Šiuo metu užsakomų medžiagų nėra.“
 - „Visos medžiagos“ visada rodoma žemiau. Paieška ir kategorijų filtras veikia abiejose skiltyse.
 - Esama D1 duomenų bazės struktūra nekeičiama, todėl nereikia iš naujo vykdyti `schema.sql` ir nereikėtų prarasti esamų likučių.
 
 ## Cloudflare nustatymai
 
-Esamus `APP_PASSWORD` ir `SESSION_SECRET` palikite tokius, kokie yra. Pridėkite vieną naują **Secret** Production aplinkoje: `VIEWER_PASSWORD` – darbuotojų peržiūros režimo slaptažodis. `APP_PASSWORD` dabar naudojamas `admin` paskyrai, o `VIEWER_PASSWORD` – `darbuotojas` paskyrai. Prisijungimo vardai yra nustatyti kode: `admin` ir `darbuotojas`.
+Esamus `APP_PASSWORD` ir `SESSION_SECRET` palikite tokius, kokie yra. Papildomo `VIEWER_PASSWORD` nebereikia. Viešam likučių skaitymui prisijungimas nereikalingas, o administratoriaus vardas yra `admin`; jo slaptažodis nustatomas per `APP_PASSWORD`.
 
-Pridėję `VIEWER_PASSWORD`, įsitikinkite, kad sukurtas naujas deployment. Slaptažodžių reikšmių nedėkite į GitHub ir nesiųskite jų pokalbyje. Cloudflare Pages Functions pasiekia slaptas reikšmes per `context.env`; po bindingų ar secrets pakeitimų reikia naujo deployment. Žr. [Cloudflare Pages Functions bindings dokumentaciją](https://developers.cloudflare.com/pages/functions/bindings/).
+Slaptažodžių reikšmių nedėkite į GitHub ir nesiųskite jų pokalbyje. Cloudflare Pages Functions pasiekia slaptas reikšmes per `context.env`; po bindingų ar secrets pakeitimų reikia naujo deployment. Žr. [Cloudflare Pages Functions bindings dokumentaciją](https://developers.cloudflare.com/pages/functions/bindings/).
 
 ## Failai
 
@@ -26,4 +26,4 @@ Pridėję `VIEWER_PASSWORD`, įsitikinkite, kad sukurtas naujas deployment. Slap
 
 ## Diegimas
 
-Įkelkite pakeistus failus į esamą GitHub repozitoriją, nekeisdami Cloudflare projekto ar D1 duomenų bazės. Automatinis deployment turėtų prasidėti po commit. Patikrinkite, kad Production aplinkoje būtų `APP_PASSWORD`, `SESSION_SECRET`, `VIEWER_PASSWORD` ir D1 binding vardu `DB`.
+Įkelkite pakeistus failus į esamą GitHub repozitoriją, nekeisdami Cloudflare projekto ar D1 duomenų bazės. Automatinis deployment turėtų prasidėti po commit. Patikrinkite, kad Production aplinkoje būtų `APP_PASSWORD`, `SESSION_SECRET` ir D1 binding vardu `DB`.

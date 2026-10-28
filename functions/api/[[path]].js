@@ -66,15 +66,14 @@ async function handler(request, env) {
   const method = request.method.toUpperCase();
 
   if (path === "login" && method === "POST") {
-    if (!env.APP_PASSWORD || !env.VIEWER_PASSWORD || !env.SESSION_SECRET) {
-      return json({ error: "Trūksta serverio konfigūracijos. Patikrinkite APP_PASSWORD, VIEWER_PASSWORD ir SESSION_SECRET." }, 500);
+    if (!env.APP_PASSWORD || !env.SESSION_SECRET) {
+      return json({ error: "Trūksta serverio konfigūracijos. Patikrinkite APP_PASSWORD ir SESSION_SECRET." }, 500);
     }
     const body = await readJson(request);
     if (!body || typeof body.username !== "string" || typeof body.password !== "string") return json({ error: "Įveskite naudotojo vardą ir slaptažodį." }, 400);
     const username = body.username.trim().toLowerCase();
     let role = null;
     if (username === "admin" && body.password === env.APP_PASSWORD) role = "admin";
-    if (username === "darbuotojas" && body.password === env.VIEWER_PASSWORD) role = "viewer";
     if (!role) return json({ error: "Neteisingas naudotojo vardas arba slaptažodis." }, 401);
     const token = await makeSession(env, username, role);
     return json({ ok: true, user: { username, role } }, 200, { "Set-Cookie": sessionCookie(token) });
@@ -88,15 +87,20 @@ async function handler(request, env) {
   }
 
   const session = await getSession(request, env);
-  if (!session) return json({ error: "Reikia prisijungti." }, 401);
-  const isAdmin = session.role === "admin";
+  const isAdmin = session?.role === "admin";
   const db = env.DB;
   if (!db) return json({ error: "Duomenų bazė neprijungta. Patikrinkite DB binding nustatymą." }, 500);
 
+  // Likučiai ir istorija viešai matomi be prisijungimo; visi keitimai lieka apsaugoti.
   if (path === "items" && method === "GET") {
     const result = await db.prepare("SELECT * FROM items ORDER BY name COLLATE NOCASE").all();
     return json({ items: result.results || [] });
   }
+  if (path === "movements" && method === "GET") {
+    const result = await db.prepare("SELECT * FROM movements ORDER BY created_at DESC LIMIT 100").all();
+    return json({ movements: result.results || [] });
+  }
+  if (!session) return json({ error: "Reikia administratoriaus prisijungimo." }, 401);
   if (path === "items" && method === "POST") {
     if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
@@ -135,10 +139,6 @@ async function handler(request, env) {
     await db.prepare("UPDATE items SET quantity=?, updated_at=? WHERE id=?").bind(after, now(), item.id).run();
     await logMovement(db, item, body.type, amount, after, body.note.trim());
     return json({ ok: true, quantity: after });
-  }
-  if (path === "movements" && method === "GET") {
-    const result = await db.prepare("SELECT * FROM movements ORDER BY created_at DESC LIMIT 100").all();
-    return json({ movements: result.results || [] });
   }
   return json({ error: "Maršrutas nerastas." }, 404);
 }

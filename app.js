@@ -12,22 +12,19 @@ async function api(path, options = {}) {
   });
   const data = response.status === 204 ? null : await response.json().catch(() => ({}));
   if (!response.ok) {
-    if (response.status === 401) showLogin();
+    if (response.status === 401 && currentUser?.role === "admin") showApp(null);
     throw new Error(data?.error || `Užklausa nepavyko (${response.status})`);
   }
   return data;
 }
-function showLogin() {
-  currentUser = null;
-  $("login-screen").classList.remove("hidden");
-  $("app").classList.add("hidden");
-}
-function showApp(user) {
-  currentUser = user;
-  const isAdmin = user?.role === "admin";
-  $("login-screen").classList.add("hidden");
+function showApp(user = null) {
+  currentUser = user || { username: "lankytojas", role: "public" };
+  const isAdmin = currentUser.role === "admin";
   $("app").classList.remove("hidden");
-  $("user-label").textContent = isAdmin ? "Administratorius" : "Peržiūros režimas";
+  $("user-label").textContent = isAdmin ? "Administratorius" : "Vieša peržiūra";
+  $("admin-login-toggle").classList.toggle("hidden", isAdmin);
+  $("logout-btn").classList.toggle("hidden", !isAdmin);
+  $("login-form").classList.add("hidden");
   document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
   render();
 }
@@ -52,6 +49,14 @@ async function loadData() {
     const [itemData, movementData] = await Promise.all([api("/api/items"), api("/api/movements")]);
     items = itemData.items || [];
     movements = movementData.movements || [];
+    const timestamps = [
+      ...items.map(item => item.updated_at || item.created_at),
+      ...movements.map(movement => movement.created_at)
+    ].filter(Boolean).map(value => new Date(value).getTime()).filter(Number.isFinite);
+    const latest = timestamps.length ? new Date(Math.max(...timestamps)) : null;
+    $("last-updated").textContent = latest
+      ? `Paskutinį kartą atnaujinta: ${new Intl.DateTimeFormat("lt-LT", { dateStyle: "medium", timeStyle: "short" }).format(latest)}`
+      : "Paskutinį kartą atnaujinta: duomenų dar nėra";
     render();
     $("sync-status").innerHTML = "<i></i> Atnaujinta";
     $("sync-status").classList.remove("offline");
@@ -127,11 +132,18 @@ function openMovementDialog(item) {
   $("movement-quantity").value = "";
   $("movement-dialog").showModal();
 }
+$("admin-login-toggle").addEventListener("click", () => {
+  $("login-form").classList.toggle("hidden");
+  $("login-error").textContent = "";
+  if (!$("login-form").classList.contains("hidden")) $("password").focus();
+});
 $("login-form").addEventListener("submit", async event => {
   event.preventDefault();
   $("login-error").textContent = "";
   try {
-    const data = await api("/api/login", { method: "POST", body: JSON.stringify({ username: $("username").value.trim(), password: $("password").value }) });
+    const username = $("username").value.trim().toLowerCase();
+    if (username !== "admin") throw new Error("Čia reikalingas administratoriaus prisijungimas.");
+    const data = await api("/api/login", { method: "POST", body: JSON.stringify({ username, password: $("password").value }) });
     $("password").value = "";
     showApp(data.user);
     await loadData();
@@ -139,7 +151,7 @@ $("login-form").addEventListener("submit", async event => {
 });
 $("logout-btn").addEventListener("click", async () => {
   try { await api("/api/logout", { method: "POST", body: "{}" }); } catch {}
-  showLogin();
+  showApp(null);
 });
 $("add-item-btn").addEventListener("click", () => openItemDialog());
 $("refresh-btn").addEventListener("click", loadData);
@@ -179,11 +191,12 @@ $("movement-form").addEventListener("submit", async event => {
   } catch (error) { $("movement-error").textContent = error.message; }
 });
 async function boot() {
+  showApp(null);
   try {
     const session = await api("/api/session");
     showApp(session.user);
-    await loadData();
-    setInterval(() => { if (!$("app").classList.contains("hidden")) loadData(); }, 15000);
-  } catch { showLogin(); }
+  } catch { /* Lankytojams nereikia prisijungti, kad matytų likučius. */ }
+  await loadData();
+  setInterval(() => loadData(), 15000);
 }
 boot();

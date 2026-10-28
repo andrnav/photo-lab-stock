@@ -2,3 +2,37 @@
 
 /* Stock-order section and role-aware controls */
 #to-order .panel-heading{padding-bottom:18px}.admin-only.hidden{display:none!important}#order-count{white-space:nowrap}
+
+/* Public inventory view with an administrator sign-in tucked into the sidebar */
+body{font-size:15px}
+.sidebar-bottom{display:block;padding:12px 5px;color:#91a2b5;font-size:12px}
+.admin-access{width:100%}
+.admin-access-title{display:flex;align-items:center;gap:9px;margin-bottom:13px;font-size:12px}
+.admin-access-title strong{font-weight:700;color:#c4d0df}
+.sidebar-login{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.sidebar-login label{display:block;font-size:12px;color:#c0cad8;font-weight:650;margin:12px 0 7px}
+.sidebar-login input{width:100%;min-width:0;background:#0c131e;border:1px solid #2b394d;border-radius:9px;padding:10px;color:var(--text);outline:none;font-size:13px}
+.sidebar-login input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8de0bd15}
+.sidebar-login .btn.full{font-size:13px;margin-top:14px}
+.sidebar-login .error{overflow-wrap:anywhere}
+.btn{font-size:13px}
+.topbar .muted{font-size:13px}
+.topbar h1{font-size:32px}
+.panel-heading h2{font-size:17px}
+.panel-heading p{font-size:12px}
+th{font-size:10px}
+td{font-size:12px}
+.material-name{font-size:13px}
+.material-note{font-size:11px}
+.qty{font-size:13px}
+.badge{font-size:10px}
+.category-tag{font-size:11px}
+.searchbox input,.toolbar select{font-size:12px}
+.stat-label{font-size:12px}
+.stat-card>small{font-size:11px}
+@media(max-width:650px){
+  .sidebar-bottom{display:block;padding:12px 4px}
+  .sidebar-login{max-width:340px}
+  .admin-access-title{margin-bottom:9px}
+  .topbar h1{font-size:27px}
+}
