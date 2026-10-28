@@ -12,28 +12,39 @@ function cookieValue(request, name) {
   const found = cookieHeader.split(";").map(v => v.trim()).find(v => v.startsWith(name + "="));
   return found ? found.slice(name.length + 1) : null;
 }
+function b64url(bytes) {
+  return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function decodeB64url(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  return atob(padded);
+}
 async function sign(value, secret) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
-  return btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return b64url(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value)));
 }
-async function makeSession(env) {
-  const expires = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  const token = `${expires}.${crypto.randomUUID()}`;
-  const signature = await sign(token, env.SESSION_SECRET);
-  return `${token}.${signature}`;
+async function makeSession(env, username, role) {
+  const payload = b64url(new TextEncoder().encode(JSON.stringify({
+    username, role, expires: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
+    nonce: crypto.randomUUID()
+  })));
+  return `${payload}.${await sign(payload, env.SESSION_SECRET)}`;
 }
-async function validSession(request, env) {
+async function getSession(request, env) {
   const raw = cookieValue(request, SESSION_COOKIE);
-  if (!raw || !env.SESSION_SECRET) return false;
+  if (!raw || !env.SESSION_SECRET) return null;
   const parts = raw.split(".");
-  if (parts.length !== 3) return false;
-  const [expires, nonce, signature] = parts;
-  if (!/^\d+$/.test(expires) || Number(expires) < Math.floor(Date.now() / 1000)) return false;
-  const expected = await sign(`${expires}.${nonce}`, env.SESSION_SECRET);
-  return signature.length === expected.length && crypto.subtle.timingSafeEqual
-    ? crypto.subtle.timingSafeEqual(new TextEncoder().encode(signature), new TextEncoder().encode(expected))
-    : signature === expected;
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
+  const expected = await sign(payload, env.SESSION_SECRET);
+  if (signature.length !== expected.length || signature !== expected) return null;
+  try {
+    const session = JSON.parse(decodeB64url(payload));
+    if (!session || !Number.isFinite(session.expires) || session.expires < Math.floor(Date.now() / 1000)) return null;
+    if (!['admin', 'viewer'].includes(session.role) || typeof session.username !== 'string') return null;
+    return { username: session.username, role: session.role };
+  } catch { return null; }
 }
 function sessionCookie(value, maxAge = SESSION_TTL_SECONDS) {
   return `${SESSION_COOKIE}=${value}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
@@ -47,8 +58,7 @@ function newId() { return crypto.randomUUID(); }
 function now() { return new Date().toISOString(); }
 async function logMovement(db, item, type, amount, after, note = "") {
   await db.prepare(`INSERT INTO movements (id,item_id,item_name,unit,change_type,change_amount,quantity_after,note,created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .bind(newId(), item.id, item.name, item.unit, type, amount, after, note, now()).run();
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(newId(), item.id, item.name, item.unit, type, amount, after, note, now()).run();
 }
 async function handler(request, env) {
   const url = new URL(request.url);
@@ -56,27 +66,30 @@ async function handler(request, env) {
   const method = request.method.toUpperCase();
 
   if (path === "login" && method === "POST") {
-    if (!env.APP_PASSWORD || !env.SESSION_SECRET) {
-  return json({
-    error: "Trūksta serverio konfigūracijos.",
-    appPasswordConfigured: Boolean(env.APP_PASSWORD),
-    sessionSecretConfigured: Boolean(env.SESSION_SECRET)
-  }, 500);
-}
+    if (!env.APP_PASSWORD || !env.VIEWER_PASSWORD || !env.SESSION_SECRET) {
+      return json({ error: "Trūksta serverio konfigūracijos. Patikrinkite APP_PASSWORD, VIEWER_PASSWORD ir SESSION_SECRET." }, 500);
+    }
     const body = await readJson(request);
-    if (!body || typeof body.password !== "string") return json({ error: "Įveskite slaptažodį." }, 400);
-    if (body.password !== env.APP_PASSWORD) return json({ error: "Neteisingas slaptažodis." }, 401);
-    const token = await makeSession(env);
-    return json({ ok: true }, 200, { "Set-Cookie": sessionCookie(token) });
+    if (!body || typeof body.username !== "string" || typeof body.password !== "string") return json({ error: "Įveskite naudotojo vardą ir slaptažodį." }, 400);
+    const username = body.username.trim().toLowerCase();
+    let role = null;
+    if (username === "admin" && body.password === env.APP_PASSWORD) role = "admin";
+    if (username === "darbuotojas" && body.password === env.VIEWER_PASSWORD) role = "viewer";
+    if (!role) return json({ error: "Neteisingas naudotojo vardas arba slaptažodis." }, 401);
+    const token = await makeSession(env, username, role);
+    return json({ ok: true, user: { username, role } }, 200, { "Set-Cookie": sessionCookie(token) });
   }
   if (path === "session" && method === "GET") {
-    return validSession(request, env) ? json({ ok: true }) : json({ error: "Reikia prisijungti." }, 401);
+    const session = await getSession(request, env);
+    return session ? json({ ok: true, user: session }) : json({ error: "Reikia prisijungti." }, 401);
   }
   if (path === "logout" && method === "POST") {
     return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });
   }
-  if (!(await validSession(request, env))) return json({ error: "Reikia prisijungti." }, 401);
 
+  const session = await getSession(request, env);
+  if (!session) return json({ error: "Reikia prisijungti." }, 401);
+  const isAdmin = session.role === "admin";
   const db = env.DB;
   if (!db) return json({ error: "Duomenų bazė neprijungta. Patikrinkite DB binding nustatymą." }, 500);
 
@@ -85,34 +98,31 @@ async function handler(request, env) {
     return json({ items: result.results || [] });
   }
   if (path === "items" && method === "POST") {
+    if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
-    if (!body || !validText(body.name, 100) || !validText(body.category, 60) ||
-        !validText(body.unit, 12) || !validNumber(body.quantity) || !validNumber(body.min_quantity) ||
-        typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
-    const item = { id: newId(), name: body.name.trim(), category: body.category, unit: body.unit, quantity: body.quantity, min_quantity: body.min_quantity, note: body.note.trim(), created_at: now(), updated_at: now() };
-    await db.prepare(`INSERT INTO items (id,name,category,unit,quantity,min_quantity,note,created_at,updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.quantity) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
+    const item = { id: newId(), name: body.name.trim(), category: body.category.trim(), unit: body.unit.trim(), quantity: body.quantity, min_quantity: body.min_quantity, note: body.note.trim(), created_at: now(), updated_at: now() };
+    await db.prepare(`INSERT INTO items (id,name,category,unit,quantity,min_quantity,note,created_at,updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(item.id,item.name,item.category,item.unit,item.quantity,item.min_quantity,item.note,item.created_at,item.updated_at).run();
     await logMovement(db, item, "created", item.quantity, item.quantity, "Pradinė pozicija");
     return json({ item }, 201);
   }
   const itemMatch = path.match(/^items\/([0-9a-f-]+)$/i);
   if (itemMatch && method === "PUT") {
+    if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
-    if (!body || !validText(body.name, 100) || !validText(body.category, 60) ||
-        !validText(body.unit, 12) || !validNumber(body.min_quantity) ||
-        typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
+    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
     const existing = await db.prepare("SELECT * FROM items WHERE id = ?").bind(itemMatch[1]).first();
     if (!existing) return json({ error: "Medžiaga nerasta." }, 404);
     await db.prepare("UPDATE items SET name=?, category=?, unit=?, min_quantity=?, note=?, updated_at=? WHERE id=?")
-      .bind(body.name.trim(), body.category, body.unit, body.min_quantity, body.note.trim(), now(), itemMatch[1]).run();
+      .bind(body.name.trim(), body.category.trim(), body.unit.trim(), body.min_quantity, body.note.trim(), now(), itemMatch[1]).run();
     return json({ ok: true });
   }
   const movementMatch = path.match(/^items\/([0-9a-f-]+)\/movement$/i);
   if (movementMatch && method === "POST") {
+    if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
-    if (!body || !["add","remove","set"].includes(body.type) || !validNumber(body.quantity) ||
-        body.quantity <= 0 || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite pakeitimo duomenis." }, 400);
+    if (!body || !["add","remove","set"].includes(body.type) || !validNumber(body.quantity) || body.quantity <= 0 || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite pakeitimo duomenis." }, 400);
     const item = await db.prepare("SELECT * FROM items WHERE id = ?").bind(movementMatch[1]).first();
     if (!item) return json({ error: "Medžiaga nerasta." }, 404);
     let after;
@@ -133,9 +143,8 @@ async function handler(request, env) {
   return json({ error: "Maršrutas nerastas." }, 404);
 }
 export async function onRequest(context) {
-  try {
-    return await handler(context.request, context.env);
-  } catch (error) {
+  try { return await handler(context.request, context.env); }
+  catch (error) {
     console.error("API error:", error);
     return json({ error: "Serverio klaida. Patikrinkite Cloudflare žurnalus." }, 500);
   }

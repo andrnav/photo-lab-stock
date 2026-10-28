@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 let items = [];
 let movements = [];
+let currentUser = null;
 let toastTimer;
 
 async function api(path, options = {}) {
@@ -17,12 +18,18 @@ async function api(path, options = {}) {
   return data;
 }
 function showLogin() {
+  currentUser = null;
   $("login-screen").classList.remove("hidden");
   $("app").classList.add("hidden");
 }
-function showApp() {
+function showApp(user) {
+  currentUser = user;
+  const isAdmin = user?.role === "admin";
   $("login-screen").classList.add("hidden");
   $("app").classList.remove("hidden");
+  $("user-label").textContent = isAdmin ? "Administratorius" : "Peržiūros režimas";
+  document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
+  render();
 }
 function showToast(message, bad = false) {
   const el = $("toast");
@@ -43,8 +50,8 @@ async function loadData() {
   $("sync-status").innerHTML = "<i></i> Sinchronizuojama";
   try {
     const [itemData, movementData] = await Promise.all([api("/api/items"), api("/api/movements")]);
-    items = itemData.items;
-    movements = movementData.movements;
+    items = itemData.items || [];
+    movements = movementData.movements || [];
     render();
     $("sync-status").innerHTML = "<i></i> Atnaujinta";
     $("sync-status").classList.remove("offline");
@@ -54,26 +61,36 @@ async function loadData() {
     showToast(error.message, true);
   }
 }
+function isLow(item) { return Number(item.quantity) <= Number(item.min_quantity); }
+function rowHtml(item) {
+  const low = isLow(item);
+  const actions = currentUser?.role === "admin"
+    ? `<div class="row-actions"><button class="mini-btn" data-move="${escapeHtml(item.id)}">± Likutis</button><button class="mini-btn" data-edit="${escapeHtml(item.id)}">Redaguoti</button></div>`
+    : `<span class="muted">Tik peržiūra</span>`;
+  return `<tr>
+    <td><span class="material-name">${escapeHtml(item.name)}</span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
+    <td><span class="category-tag">${escapeHtml(item.category)}</span></td>
+    <td><span class="qty">${num(item.quantity)} <small>${escapeHtml(item.unit)}</small></span></td>
+    <td>${num(item.min_quantity)} <small>${escapeHtml(item.unit)}</small></td>
+    <td><span class="badge ${low ? "low" : "ok"}">${low ? "Užsakyti" : "Pakanka"}</span></td>
+    <td>${actions}</td>
+  </tr>`;
+}
 function render() {
+  if (!currentUser) return;
   const search = $("search").value.trim().toLocaleLowerCase("lt");
   const category = $("category-filter").value;
   const filtered = items.filter(item => (!category || item.category === category) &&
     `${item.name} ${item.note || ""}`.toLocaleLowerCase("lt").includes(search));
+  const lowItems = filtered.filter(isLow).sort((a,b) => (Number(a.quantity)-Number(a.min_quantity)) - (Number(b.quantity)-Number(b.min_quantity)) || a.name.localeCompare(b.name, "lt"));
+  const allSorted = [...filtered].sort((a,b) => Number(isLow(b))-Number(isLow(a)) || a.name.localeCompare(b.name, "lt"));
   $("stat-items").textContent = items.length;
-  $("stat-low").textContent = items.filter(i => Number(i.quantity) <= Number(i.min_quantity)).length;
+  $("stat-low").textContent = items.filter(isLow).length;
   $("stat-total").textContent = num(items.reduce((sum, item) => sum + Number(item.quantity), 0));
   $("table-count").textContent = `${filtered.length} pozicijų`;
-  $("inventory-body").innerHTML = filtered.length ? filtered.map(item => {
-    const low = Number(item.quantity) <= Number(item.min_quantity);
-    return `<tr>
-      <td><span class="material-name">${escapeHtml(item.name)}</span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
-      <td><span class="category-tag">${escapeHtml(item.category)}</span></td>
-      <td><span class="qty">${num(item.quantity)} <small>${escapeHtml(item.unit)}</small></span></td>
-      <td>${num(item.min_quantity)} <small>${escapeHtml(item.unit)}</small></td>
-      <td><span class="badge ${low ? "low" : "ok"}">${low ? "Mažas likutis" : "Pakanka"}</span></td>
-      <td><div class="row-actions"><button class="mini-btn" data-move="${item.id}">± Likutis</button><button class="mini-btn" data-edit="${item.id}">Redaguoti</button></div></td>
-    </tr>`;
-  }).join("") : `<tr><td colspan="6" class="empty">Pozicijų nerasta. Pridėk pirmąją medžiagą.</td></tr>`;
+  $("order-count").textContent = `${lowItems.length} pozicijų`;
+  $("order-body").innerHTML = lowItems.length ? lowItems.map(rowHtml).join("") : `<tr><td colspan="6" class="empty">Šiuo metu užsakomų medžiagų nėra.</td></tr>`;
+  $("inventory-body").innerHTML = allSorted.length ? allSorted.map(rowHtml).join("") : `<tr><td colspan="6" class="empty">Medžiagų sąrašas tuščias arba pagal filtrą nieko nerasta.</td></tr>`;
   $("history-body").innerHTML = movements.length ? movements.slice(0, 20).map(m => {
     const cls = m.change_type === "add" ? "change-positive" : m.change_type === "remove" ? "change-negative" : "change-set";
     const label = m.change_type === "add" ? "Papildymas" : m.change_type === "remove" ? "Nurašymas" : m.change_type === "set" ? "Likučio nustatymas" : "Sukurta";
@@ -85,6 +102,7 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 function openItemDialog(item = null) {
+  if (currentUser?.role !== "admin") return;
   $("item-form").reset();
   $("item-error").textContent = "";
   $("item-id").value = item?.id || "";
@@ -100,6 +118,7 @@ function openItemDialog(item = null) {
   $("item-dialog").showModal();
 }
 function openMovementDialog(item) {
+  if (currentUser?.role !== "admin") return;
   $("movement-form").reset();
   $("movement-error").textContent = "";
   $("movement-item-id").value = item.id;
@@ -112,9 +131,9 @@ $("login-form").addEventListener("submit", async event => {
   event.preventDefault();
   $("login-error").textContent = "";
   try {
-    await api("/api/login", { method: "POST", body: JSON.stringify({ password: $("password").value }) });
+    const data = await api("/api/login", { method: "POST", body: JSON.stringify({ username: $("username").value.trim(), password: $("password").value }) });
     $("password").value = "";
-    showApp();
+    showApp(data.user);
     await loadData();
   } catch (error) { $("login-error").textContent = error.message; }
 });
@@ -126,7 +145,7 @@ $("add-item-btn").addEventListener("click", () => openItemDialog());
 $("refresh-btn").addEventListener("click", loadData);
 $("search").addEventListener("input", render);
 $("category-filter").addEventListener("change", render);
-$("inventory-body").addEventListener("click", event => {
+document.addEventListener("click", event => {
   const moveId = event.target.closest("[data-move]")?.dataset.move;
   const editId = event.target.closest("[data-edit]")?.dataset.edit;
   if (moveId) { const item = items.find(i => i.id === moveId); if (item) openMovementDialog(item); }
@@ -135,12 +154,10 @@ $("inventory-body").addEventListener("click", event => {
 document.querySelectorAll("[data-close]").forEach(button => button.addEventListener("click", () => $(button.dataset.close).close()));
 $("item-form").addEventListener("submit", async event => {
   event.preventDefault();
+  if (currentUser?.role !== "admin") return;
   $("item-error").textContent = "";
   const id = $("item-id").value;
-  const body = {
-    name: $("item-name").value.trim(), category: $("item-category").value, unit: $("item-unit").value,
-    quantity: Number($("item-quantity").value), min_quantity: Number($("item-min").value), note: $("item-note").value.trim()
-  };
+  const body = { name: $("item-name").value.trim(), category: $("item-category").value, unit: $("item-unit").value, quantity: Number($("item-quantity").value), min_quantity: Number($("item-min").value), note: $("item-note").value.trim() };
   try {
     await api(id ? `/api/items/${id}` : "/api/items", { method: id ? "PUT" : "POST", body: JSON.stringify(body) });
     $("item-dialog").close();
@@ -150,6 +167,7 @@ $("item-form").addEventListener("submit", async event => {
 });
 $("movement-form").addEventListener("submit", async event => {
   event.preventDefault();
+  if (currentUser?.role !== "admin") return;
   $("movement-error").textContent = "";
   const id = $("movement-item-id").value;
   const body = { type: $("movement-type").value, quantity: Number($("movement-quantity").value), note: $("movement-note").value.trim() };
@@ -162,8 +180,8 @@ $("movement-form").addEventListener("submit", async event => {
 });
 async function boot() {
   try {
-    await api("/api/session");
-    showApp();
+    const session = await api("/api/session");
+    showApp(session.user);
     await loadData();
     setInterval(() => { if (!$("app").classList.contains("hidden")) loadData(); }, 15000);
   } catch { showLogin(); }

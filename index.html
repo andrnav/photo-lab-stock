@@ -13,9 +13,11 @@
       <div class="brand-mark">PL</div>
       <p class="eyebrow">VIDINĖ SISTEMA</p>
       <h1>Photo Lab Stock</h1>
-      <p class="muted">Prisijunkite, kad peržiūrėtumėte ir atnaujintumėte medžiagų likučius.</p>
+      <p class="muted">Prisijunkite prie bendro medžiagų sandėlio.</p>
       <form id="login-form">
-        <label for="password">Prieigos slaptažodis</label>
+        <label for="username">Naudotojo vardas</label>
+        <input id="username" autocomplete="username" required placeholder="admin arba darbuotojas">
+        <label for="password">Slaptažodis</label>
         <input id="password" type="password" autocomplete="current-password" required placeholder="Įveskite slaptažodį">
         <button class="btn primary full" type="submit">Prisijungti <span>→</span></button>
         <p id="login-error" class="error" role="alert"></p>
@@ -28,7 +30,7 @@
     <aside class="sidebar">
       <div class="brand-row"><div class="brand-mark small">PL</div><div><strong>Photo Lab</strong><small>STOCK MANAGER</small></div></div>
       <nav><a class="nav-item active" href="#inventory"><span>▦</span> Likučiai</a><a class="nav-item" href="#history"><span>↻</span> Pakeitimų istorija</a></nav>
-      <div class="sidebar-bottom"><div class="status-dot"></div><span>Prisijungta saugiai</span><button id="logout-btn" class="text-btn">Atsijungti</button></div>
+      <div class="sidebar-bottom"><div class="status-dot"></div><span id="user-label">Prisijungta</span><button id="logout-btn" class="text-btn">Atsijungti</button></div>
     </aside>
 
     <main class="main-content">
@@ -39,8 +41,13 @@
         <article class="stat-card"><div class="stat-top"><span class="stat-label">Bendras kiekis</span><span class="stat-icon blue">↗</span></div><strong id="stat-total">0</strong><small>Visų pozicijų kiekių suma</small></article>
       </section>
 
+      <section class="panel" id="to-order">
+        <div class="panel-heading"><div><h2>Užsakomos medžiagos</h2><p class="muted">Medžiagos, kurių likutis pasiekė minimalią ribą arba yra mažesnis.</p></div><span id="order-count" class="category-tag">0 pozicijų</span></div>
+        <div class="table-wrap"><table><thead><tr><th>MEDŽIAGA</th><th>KATEGORIJA</th><th>LIKUTIS</th><th>MIN. LIKUTIS</th><th>BŪKLĖ</th><th></th></tr></thead><tbody id="order-body"><tr><td colspan="6" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
+      </section>
+
       <section class="panel" id="inventory">
-        <div class="panel-heading"><div><h2>Sandėlio pozicijos</h2><p class="muted">Pridėkite medžiagą arba registruokite jos sunaudojimą.</p></div><button id="add-item-btn" class="btn primary">＋ Pridėti medžiagą</button></div>
+        <div class="panel-heading"><div><h2>Visos medžiagos</h2><p class="muted">Visas sandėlio sąrašas, įskaitant medžiagas, kurių likučio pakanka.</p></div><button id="add-item-btn" class="btn primary admin-only">＋ Pridėti medžiagą</button></div>
         <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="search" type="search" placeholder="Ieškoti medžiagos..."></div><select id="category-filter" aria-label="Filtruoti pagal kategoriją"><option value="">Visos kategorijos</option><option>Fotopopierius</option><option>Chemija</option><option>Eksploatacinės medžiagos</option><option>Kita</option></select></div>
         <div class="table-wrap"><table><thead><tr><th>MEDŽIAGA</th><th>KATEGORIJA</th><th>LIKUTIS</th><th>MIN. LIKUTIS</th><th>BŪKLĖ</th><th></th></tr></thead><tbody id="inventory-body"><tr><td colspan="6" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
         <div class="panel-footer"><span id="table-count">0 pozicijų</span><span>Duomenys saugomi serverio duomenų bazėje</span></div>
