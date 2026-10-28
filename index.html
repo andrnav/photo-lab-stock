@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#10151f">
+  <meta name="theme-color" content="#ffffff">
   <title>Photo Lab Stock</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -31,7 +31,7 @@
     </aside>
 
     <main class="main-content">
-      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
+      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p id="lithuania-clock" class="lithuania-clock" aria-live="off">Lietuvos laikas: tikrinama…</p><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="theme-toggle" class="btn secondary" type="button" aria-label="Keisti dienos ir nakties režimą">☾ Naktis</button><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
 
 
       <section class="panel" id="to-order">
@@ -39,10 +39,8 @@
         <div class="table-wrap"><table><thead><tr><th>PREKĖS KODAS</th><th>BŪKLĖ</th><th>MIN. LIKUTIS</th><th>LIKUTIS</th><th>PAVADINIMAS</th><th>KATEGORIJA</th><th></th></tr></thead><tbody id="order-body"><tr><td colspan="7" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
       </section>
 
-      <section class="stats-grid">
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Visos pozicijos</span><span class="stat-icon">▦</span></div><strong id="stat-items">0</strong><small>Skirtingos medžiagos</small></article>
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Reikia atkreipti dėmesį</small></article>
-        <article class="stat-card"><div class="stat-top"><span class="stat-label">Bendras kiekis</span><span class="stat-icon blue">↗</span></div><strong id="stat-total">0</strong><small>Visų pozicijų kiekių suma</small></article>
+      <section class="stats-grid stats-grid-single">
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis · atkreipti dėmesį</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Medžiagos, kurias reikia užsakyti</small></article>
       </section>
 
       <section class="panel" id="inventory">
@@ -53,7 +51,7 @@
       </section>
 
       <section class="panel history-panel" id="history">
-        <div class="panel-heading"><div><h2>Naujausi pakeitimai</h2><p class="muted">Kas, kada ir kiek pakeitė.</p></div></div>
+        <div class="panel-heading"><div><h2>Naujausi pakeitimai</h2><p class="muted">Paskutiniai 3 pakeitimai.</p></div></div>
         <div class="table-wrap"><table><thead><tr><th>LAIKAS</th><th>MEDŽIAGA</th><th>VEIKSMAS</th><th>POKYČIO KIEKIS</th><th>PO POKYČIO</th></tr></thead><tbody id="history-body"><tr><td colspan="5" class="empty">Kraunama istorija…</td></tr></tbody></table></div>
       </section>
       <footer>Photo Lab Stock <span>•</span> Bandomasis projektas</footer>

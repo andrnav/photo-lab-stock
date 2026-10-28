@@ -45,3 +45,57 @@ td{font-size:12px}
 .row-actions{flex-wrap:wrap;min-width:225px}.mini-btn[data-qr]{color:#b8c8ff}
 .qr-content>.muted{font-size:13px;margin:0 0 16px}.qr-code{min-height:230px;display:grid;place-items:center;background:#fff;border-radius:12px;padding:10px;width:240px;max-width:100%;margin:16px auto}.qr-code img,.qr-code canvas{max-width:100%;height:auto}.qr-label{text-align:center;color:#dce5f1;font-size:12px;font-weight:700;overflow-wrap:anywhere}.qr-content .dialog-actions{justify-content:center}
 @media(max-width:650px){.row-actions{min-width:220px}.product-code{font-size:10px}}
+
+
+/* Photo Lab Stock brand themes: white, green and black by day; existing dark palette by night. */
+body[data-theme="day"] {
+  --bg:#f4f7f4; --surface:#ffffff; --surface2:#edf3ed; --line:#d9e3da; --text:#111711;
+  --muted:#647166; --accent:#248344; --accent-dark:#e0f1e4; --blue:#2867a6; --red:#b4232d; --yellow:#8a5a00;
+  background:#f4f7f4; color:var(--text);
+}
+body[data-theme="day"] .sidebar {background:#ffffff;border-color:#d9e3da}
+body[data-theme="day"] .brand-mark {background:#248344;color:#ffffff;box-shadow:0 8px 24px #24834420}
+body[data-theme="day"] .brand-row strong, body[data-theme="day"] .material-name,
+body[data-theme="day"] .topbar h1, body[data-theme="day"] .dialog-heading h2 {color:#111711}
+body[data-theme="day"] .brand-row small, body[data-theme="day"] .admin-access-title strong {color:#526156}
+body[data-theme="day"] .nav-item {color:#536157}
+body[data-theme="day"] .nav-item.active, body[data-theme="day"] .nav-item:hover {background:#e5f3e8;color:#176c31}
+body[data-theme="day"] .panel, body[data-theme="day"] .stat-card {background:#ffffff;border-color:#d9e3da;box-shadow:0 8px 24px #152b1810}
+body[data-theme="day"] .stat-label {color:#526156}
+body[data-theme="day"] .stat-icon {background:#e1f2e5;color:#176c31}
+body[data-theme="day"] .stat-icon.warning {background:#fff0d2;color:#8a5a00}
+body[data-theme="day"] .panel-heading h2 {color:#172018}
+body[data-theme="day"] thead {background:#edf4ee}
+body[data-theme="day"] th {color:#5d6b60}
+body[data-theme="day"] td {color:#29352b;border-top-color:#e6ece6}
+body[data-theme="day"] tbody tr:hover {background:#2483440b}
+body[data-theme="day"] .material-note {color:#69766c}
+body[data-theme="day"] .category-tag {background:#e9f2ea;color:#34553a}
+body[data-theme="day"] .badge.ok {background:#e0f3e5;color:#176c31}
+body[data-theme="day"] .badge.low {background:#fff0d2;color:#8a5a00}
+body[data-theme="day"] .btn.primary {background:#248344;color:#ffffff}
+body[data-theme="day"] .btn.secondary, body[data-theme="day"] .mini-btn {background:#ffffff;border-color:#cbd8cc;color:#29382c}
+body[data-theme="day"] .mini-btn:hover {border-color:#248344;color:#176c31}
+body[data-theme="day"] .product-code {background:#edf5ee;border-color:#d2e3d4;color:#176c31}
+body[data-theme="day"] .product-name-copy {color:#172018}
+body[data-theme="day"] .searchbox, body[data-theme="day"] .toolbar select {background:#ffffff;border-color:#d0dbd1;color:#253328}
+body[data-theme="day"] .searchbox input {color:#172018}
+body[data-theme="day"] .panel-footer {border-color:#e1e9e1;color:#69766c}
+body[data-theme="day"] .sync-pill {background:#e4f4e8;border-color:#c4e2cb;color:#176c31}
+body[data-theme="day"] .sync-pill i, body[data-theme="day"] .status-dot {background:#248344}
+body[data-theme="day"] dialog {background:#ffffff;color:#172018;border-color:#d0dbd1}
+body[data-theme="day"] dialog::backdrop {background:#101a12aa}
+body[data-theme="day"] .dialog-form label {color:#465448}
+body[data-theme="day"] .dialog-form input, body[data-theme="day"] .dialog-form select {background:#ffffff;border-color:#cbd8cc;color:#172018}
+body[data-theme="day"] .icon-btn {background:#f1f5f1;border-color:#d4dfd5;color:#172018}
+body[data-theme="day"] .movement-current {background:#f2f7f2;border-color:#d4dfd5;color:#435145}
+body[data-theme="day"] .lithuania-clock {color:#176c31}
+body[data-theme="night"] {--bg:#0c111a;--surface:#121a27;--surface2:#172131;--line:#263346;--text:#edf2f8;--muted:#8d9bb0;--accent:#8de0bd;--accent-dark:#173c35;--blue:#8cb8ff;--red:#ff8d91;--yellow:#f4cb77;background:radial-gradient(ellipse at 85% 0%,#142332 0,transparent 34%),var(--bg);color:var(--text)}
+body[data-theme="night"] .sidebar {background:#0d141f;border-color:#263346}
+body[data-theme="night"] .panel, body[data-theme="night"] .stat-card {background:linear-gradient(145deg,#141e2c,#111925);border-color:#263346}
+.lithuania-clock {font-size:13px;font-weight:800;color:#176c31;letter-spacing:.1px;margin:10px 0 0;font-variant-numeric:tabular-nums}
+.stats-grid-single {grid-template-columns:minmax(240px, 360px);}
+.copy-code-btn {cursor:pointer;font-family:inherit}
+.product-name-copy {border:0;background:transparent;padding:0;text-align:left;color:var(--text);font:inherit;font-weight:750;font-size:12px;cursor:pointer}
+.product-name-copy:hover {text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+@media(max-width:650px){.stats-grid-single{grid-template-columns:1fr}.top-actions{flex-wrap:wrap}.lithuania-clock{line-height:1.5}}

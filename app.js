@@ -42,7 +42,23 @@ function num(value) {
   return new Intl.NumberFormat("lt-LT", { maximumFractionDigits: 2 }).format(Number(value) || 0);
 }
 function dateTime(value) {
-  return new Intl.DateTimeFormat("lt-LT", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat("lt-LT", { timeZone: "Europe/Vilnius", dateStyle: "short", timeStyle: "medium" }).format(new Date(value));
+}
+function updateLithuaniaClock() {
+  const now = new Date();
+  const weekday = new Intl.DateTimeFormat("lt-LT", { timeZone: "Europe/Vilnius", weekday: "long" }).format(now);
+  const date = new Intl.DateTimeFormat("lt-LT", { timeZone: "Europe/Vilnius", year: "numeric", month: "long", day: "numeric" }).format(now);
+  const time = new Intl.DateTimeFormat("lt-LT", { timeZone: "Europe/Vilnius", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(now);
+  $("lithuania-clock").textContent = `${weekday.charAt(0).toLocaleUpperCase("lt-LT") + weekday.slice(1)} · ${date} · ${time}`;
+}
+function setTheme(theme) {
+  const selected = theme === "night" ? "night" : "day";
+  document.body.dataset.theme = selected;
+  localStorage.setItem("photo-lab-stock-theme", selected);
+  const button = $("theme-toggle");
+  button.textContent = selected === "day" ? "☾ Naktis" : "☀ Diena";
+  button.setAttribute("aria-label", selected === "day" ? "Įjungti nakties režimą" : "Įjungti dienos režimą");
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", selected === "day" ? "#ffffff" : "#0c111a");
 }
 async function loadData() {
   $("sync-status").classList.remove("offline");
@@ -76,11 +92,11 @@ function rowHtml(item) {
     : `<span class="muted">Tik peržiūra</span>`;
   const color = ["green","pink","blue","yellow","purple"].includes(item.color) ? `<span class="color-dot ${escapeHtml(item.color)}" title="${escapeHtml(colorName(item.color))}"></span>` : "";
   return `<tr>
-    <td>${item.product_code ? `<span class="product-code">${escapeHtml(item.product_code)}</span>` : `<span class="muted">—</span>`}</td>
+    <td>${item.product_code ? `<button type="button" class="product-code copy-code-btn" data-copy-code="${escapeHtml(item.id)}" title="Paspauskite, kad nukopijuotumėte prekės kodą">${escapeHtml(item.product_code)}</button>` : `<span class="muted">—</span>`}</td>
     <td><span class="badge ${low ? "low" : "ok"}">${low ? "Užsakyti" : "Pakanka"}</span></td>
     <td>${num(item.min_quantity)} <small>${escapeHtml(item.unit)}</small></td>
     <td><span class="qty">${num(item.quantity)} <small>${escapeHtml(item.unit)}</small></span></td>
-    <td><span class="name-with-color">${color}<span class="material-name">${escapeHtml(item.name)}</span></span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
+    <td><span class="name-with-color">${color}<button type="button" class="product-name-copy" data-copy-code="${escapeHtml(item.id)}" title="Paspauskite, kad nukopijuotumėte prekės kodą">${escapeHtml(item.name)}</button></span>${item.note ? `<span class="material-note">${escapeHtml(item.note)}</span>` : ""}</td>
     <td><span class="category-tag">${escapeHtml(item.category)}</span></td>
     <td>${actions}</td>
   </tr>`;
@@ -96,14 +112,12 @@ function render() {
     `${item.product_code || ""} ${item.name} ${item.category} ${item.note || ""}`.toLocaleLowerCase("lt").includes(search));
   const lowItems = filtered.filter(isLow).sort((a,b) => a.name.localeCompare(b.name, "lt", { sensitivity: "base" }));
   const allSorted = [...filtered].sort((a,b) => a.name.localeCompare(b.name, "lt", { sensitivity: "base" }) || String(a.product_code || "").localeCompare(String(b.product_code || ""), "lt"));
-  $("stat-items").textContent = items.length;
   $("stat-low").textContent = items.filter(isLow).length;
-  $("stat-total").textContent = num(items.reduce((sum, item) => sum + Number(item.quantity), 0));
   $("table-count").textContent = `${filtered.length} pozicijų`;
   $("order-count").textContent = `${lowItems.length} pozicijų`;
   $("order-body").innerHTML = lowItems.length ? lowItems.map(rowHtml).join("") : `<tr><td colspan="7" class="empty">Šiuo metu užsakomų medžiagų nėra.</td></tr>`;
   $("inventory-body").innerHTML = allSorted.length ? allSorted.map(rowHtml).join("") : `<tr><td colspan="7" class="empty">Medžiagų sąrašas tuščias arba pagal filtrą nieko nerasta.</td></tr>`;
-  $("history-body").innerHTML = movements.length ? movements.slice(0, 20).map(m => {
+  $("history-body").innerHTML = movements.length ? movements.slice(0, 3).map(m => {
     const cls = m.change_type === "add" ? "change-positive" : m.change_type === "remove" ? "change-negative" : "change-set";
     const label = m.change_type === "add" ? "Papildymas" : m.change_type === "remove" ? "Nurašymas" : m.change_type === "set" ? "Likučio nustatymas" : "Sukurta";
     const amount = m.change_type === "set" ? `→ ${num(m.quantity_after)}` : `${m.change_type === "add" ? "+" : m.change_type === "remove" ? "−" : ""}${num(m.change_amount)} ${escapeHtml(m.unit || "")}`;
@@ -165,12 +179,26 @@ $("logout-btn").addEventListener("click", async () => {
 });
 $("add-item-btn").addEventListener("click", () => openItemDialog());
 $("refresh-btn").addEventListener("click", loadData);
+$("theme-toggle").addEventListener("click", () => setTheme(document.body.dataset.theme === "day" ? "night" : "day"));
 $("search").addEventListener("input", render);
 $("category-filter").addEventListener("change", render);
-document.addEventListener("click", event => {
+document.addEventListener("click", async event => {
   const moveId = event.target.closest("[data-move]")?.dataset.move;
   const editId = event.target.closest("[data-edit]")?.dataset.edit;
   const qrId = event.target.closest("[data-qr]")?.dataset.qr;
+  const copyCodeId = event.target.closest("[data-copy-code]")?.dataset.copyCode;
+  if (copyCodeId) {
+    const item = items.find(i => i.id === copyCodeId);
+    if (item?.product_code) {
+      try {
+        await navigator.clipboard.writeText(item.product_code);
+        showToast(`Prekės kodas nukopijuotas: ${item.product_code}`);
+      } catch {
+        showToast(`Prekės kodas: ${item.product_code} · naršyklė neleido nukopijuoti automatiškai`, true);
+      }
+    } else showToast("Šiai prekei prekės kodas nenurodytas.", true);
+    return;
+  }
   if (moveId) { const item = items.find(i => i.id === moveId); if (item) openMovementDialog(item); }
   if (editId) { const item = items.find(i => i.id === editId); if (item) openItemDialog(item); }
   if (qrId) { const item = items.find(i => i.id === qrId); if (item) openQrDialog(item); }
@@ -250,6 +278,9 @@ async function boot() {
     const cleanUrl = window.location.pathname + (params.toString() ? `?${params}` : "") + window.location.hash;
     history.replaceState({}, "", cleanUrl);
   }
+  setTheme(localStorage.getItem("photo-lab-stock-theme") || "day");
+  updateLithuaniaClock();
+  setInterval(updateLithuaniaClock, 1000);
   showApp(null);
   try {
     const session = await api("/api/session");
