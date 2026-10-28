@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151f">
+  <title>Photo Lab Stock</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main id="login-screen" class="login-wrap">
+    <section class="login-card">
+      <div class="brand-mark">PL</div>
+      <p class="eyebrow">VIDINĖ SISTEMA</p>
+      <h1>Photo Lab Stock</h1>
+      <p class="muted">Prisijunkite, kad peržiūrėtumėte ir atnaujintumėte medžiagų likučius.</p>
+      <form id="login-form">
+        <label for="password">Prieigos slaptažodis</label>
+        <input id="password" type="password" autocomplete="current-password" required placeholder="Įveskite slaptažodį">
+        <button class="btn primary full" type="submit">Prisijungti <span>→</span></button>
+        <p id="login-error" class="error" role="alert"></p>
+      </form>
+      <p class="tiny muted">Bandomoji versija. Nenaudokite tikrų darbo duomenų, kol nepatikrinta apsauga ir atsarginės kopijos.</p>
+    </section>
+  </main>
+
+  <div id="app" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand-row"><div class="brand-mark small">PL</div><div><strong>Photo Lab</strong><small>STOCK MANAGER</small></div></div>
+      <nav><a class="nav-item active" href="#inventory"><span>▦</span> Likučiai</a><a class="nav-item" href="#history"><span>↻</span> Pakeitimų istorija</a></nav>
+      <div class="sidebar-bottom"><div class="status-dot"></div><span>Prisijungta saugiai</span><button id="logout-btn" class="text-btn">Atsijungti</button></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted">Vienas bendras likučių vaizdas visai komandai.</p></div><div class="top-actions"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></header>
+      <section class="stats-grid">
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Visos pozicijos</span><span class="stat-icon">▦</span></div><strong id="stat-items">0</strong><small>Skirtingos medžiagos</small></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Mažas likutis</span><span class="stat-icon warning">!</span></div><strong id="stat-low">0</strong><small>Reikia atkreipti dėmesį</small></article>
+        <article class="stat-card"><div class="stat-top"><span class="stat-label">Bendras kiekis</span><span class="stat-icon blue">↗</span></div><strong id="stat-total">0</strong><small>Visų pozicijų kiekių suma</small></article>
+      </section>
+
+      <section class="panel" id="inventory">
+        <div class="panel-heading"><div><h2>Sandėlio pozicijos</h2><p class="muted">Pridėkite medžiagą arba registruokite jos sunaudojimą.</p></div><button id="add-item-btn" class="btn primary">＋ Pridėti medžiagą</button></div>
+        <div class="toolbar"><div class="searchbox"><span>⌕</span><input id="search" type="search" placeholder="Ieškoti medžiagos..."></div><select id="category-filter" aria-label="Filtruoti pagal kategoriją"><option value="">Visos kategorijos</option><option>Fotopopierius</option><option>Chemija</option><option>Eksploatacinės medžiagos</option><option>Kita</option></select></div>
+        <div class="table-wrap"><table><thead><tr><th>MEDŽIAGA</th><th>KATEGORIJA</th><th>LIKUTIS</th><th>MIN. LIKUTIS</th><th>BŪKLĖ</th><th></th></tr></thead><tbody id="inventory-body"><tr><td colspan="6" class="empty">Kraunami duomenys…</td></tr></tbody></table></div>
+        <div class="panel-footer"><span id="table-count">0 pozicijų</span><span>Duomenys saugomi serverio duomenų bazėje</span></div>
+      </section>
+
+      <section class="panel history-panel" id="history">
+        <div class="panel-heading"><div><h2>Naujausi pakeitimai</h2><p class="muted">Kas, kada ir kiek pakeitė.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>LAIKAS</th><th>MEDŽIAGA</th><th>VEIKSMAS</th><th>POKYČIO KIEKIS</th><th>PO POKYČIO</th></tr></thead><tbody id="history-body"><tr><td colspan="5" class="empty">Kraunama istorija…</td></tr></tbody></table></div>
+      </section>
+      <footer>Photo Lab Stock <span>•</span> Bandomasis projektas</footer>
+    </main>
+  </div>
+
+  <dialog id="item-dialog">
+    <form id="item-form" class="dialog-form">
+      <div class="dialog-heading"><div><p class="eyebrow">SANDĖLIO ĮRAŠAS</p><h2 id="item-dialog-title">Pridėti medžiagą</h2></div><button type="button" class="icon-btn" data-close="item-dialog" aria-label="Uždaryti">×</button></div>
+      <input type="hidden" id="item-id">
+      <label for="item-name">Pavadinimas</label><input id="item-name" maxlength="100" required placeholder="Pvz., FUJI Crystal Archive DP2">
+      <div class="form-row"><div><label for="item-category">Kategorija</label><select id="item-category"><option>Fotopopierius</option><option>Chemija</option><option>Eksploatacinės medžiagos</option><option>Kita</option></select></div><div><label for="item-unit">Matavimo vienetas</label><select id="item-unit"><option value="m">m</option><option value="vnt.">vnt.</option><option value="l">l</option><option value="kg">kg</option><option value="pak.">pak.</option></select></div></div>
+      <div class="form-row"><div><label for="item-quantity">Dabartinis kiekis</label><input id="item-quantity" type="number" min="0" step="0.01" required value="0"></div><div><label for="item-min">Minimalus likutis</label><input id="item-min" type="number" min="0" step="0.01" required value="0"></div></div>
+      <label for="item-note">Pastaba (nebūtina)</label><input id="item-note" maxlength="250" placeholder="Pvz., 305 mm rulonas">
+      <p id="item-error" class="error"></p><div class="dialog-actions"><button type="button" class="btn secondary" data-close="item-dialog">Atšaukti</button><button type="submit" class="btn primary">Išsaugoti</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="movement-dialog">
+    <form id="movement-form" class="dialog-form">
+      <div class="dialog-heading"><div><p class="eyebrow">LIKUTIS</p><h2 id="movement-title">Keisti likutį</h2></div><button type="button" class="icon-btn" data-close="movement-dialog" aria-label="Uždaryti">×</button></div>
+      <input type="hidden" id="movement-item-id"><p id="movement-current" class="movement-current"></p>
+      <label for="movement-type">Veiksmas</label><select id="movement-type"><option value="add">Papildyti likutį (+)</option><option value="remove">Nurašyti / sunaudoti (−)</option><option value="set">Nustatyti tikslų likutį (=)</option></select>
+      <label for="movement-quantity">Kiekis</label><input id="movement-quantity" type="number" min="0.01" step="0.01" required placeholder="0">
+      <label for="movement-note">Pastaba (nebūtina)</label><input id="movement-note" maxlength="250" placeholder="Pvz., sunaudota užsakymui">
+      <p id="movement-error" class="error"></p><div class="dialog-actions"><button type="button" class="btn secondary" data-close="movement-dialog">Atšaukti</button><button type="submit" class="btn primary">Patvirtinti pakeitimą</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
