@@ -3,6 +3,8 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS items (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  product_code TEXT NOT NULL DEFAULT '',
+  color TEXT NOT NULL DEFAULT 'none',
   category TEXT NOT NULL DEFAULT 'Kita',
   unit TEXT NOT NULL DEFAULT 'vnt.',
   quantity REAL NOT NULL DEFAULT 0 CHECK (quantity >= 0),

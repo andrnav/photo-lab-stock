@@ -60,6 +60,18 @@ async function logMovement(db, item, type, amount, after, note = "") {
   await db.prepare(`INSERT INTO movements (id,item_id,item_name,unit,change_type,change_amount,quantity_after,note,created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(newId(), item.id, item.name, item.unit, type, amount, after, note, now()).run();
 }
+async function ensureItemColumns(db) {
+  const info = await db.prepare("PRAGMA table_info(items)").all();
+  const columns = new Set((info.results || []).map(column => column.name));
+  if (!columns.has("product_code")) {
+    try { await db.prepare("ALTER TABLE items ADD COLUMN product_code TEXT NOT NULL DEFAULT ''").run(); }
+    catch (error) { if (!String(error?.message || error).toLowerCase().includes("duplicate column")) throw error; }
+  }
+  if (!columns.has("color")) {
+    try { await db.prepare("ALTER TABLE items ADD COLUMN color TEXT NOT NULL DEFAULT 'none'").run(); }
+    catch (error) { if (!String(error?.message || error).toLowerCase().includes("duplicate column")) throw error; }
+  }
+}
 async function handler(request, env) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api\/?/, "").replace(/\/$/, "");
@@ -90,6 +102,7 @@ async function handler(request, env) {
   const isAdmin = session?.role === "admin";
   const db = env.DB;
   if (!db) return json({ error: "Duomenų bazė neprijungta. Patikrinkite DB binding nustatymą." }, 500);
+  await ensureItemColumns(db);
 
   // Likučiai ir istorija viešai matomi be prisijungimo; visi keitimai lieka apsaugoti.
   if (path === "items" && method === "GET") {
@@ -104,10 +117,10 @@ async function handler(request, env) {
   if (path === "items" && method === "POST") {
     if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
-    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.quantity) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
-    const item = { id: newId(), name: body.name.trim(), category: body.category.trim(), unit: body.unit.trim(), quantity: body.quantity, min_quantity: body.min_quantity, note: body.note.trim(), created_at: now(), updated_at: now() };
-    await db.prepare(`INSERT INTO items (id,name,category,unit,quantity,min_quantity,note,created_at,updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .bind(item.id,item.name,item.category,item.unit,item.quantity,item.min_quantity,item.note,item.created_at,item.updated_at).run();
+    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.quantity) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250 || typeof (body.product_code ?? "") !== "string" || (body.product_code ?? "").length > 60 || !["none","green","pink","blue","yellow","purple"].includes(body.color || "none")) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
+    const item = { id: newId(), product_code: (body.product_code || "").trim(), color: body.color || "none", name: body.name.trim(), category: body.category.trim(), unit: body.unit.trim(), quantity: body.quantity, min_quantity: body.min_quantity, note: body.note.trim(), created_at: now(), updated_at: now() };
+    await db.prepare(`INSERT INTO items (id,product_code,color,name,category,unit,quantity,min_quantity,note,created_at,updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .bind(item.id,item.product_code,item.color,item.name,item.category,item.unit,item.quantity,item.min_quantity,item.note,item.created_at,item.updated_at).run();
     await logMovement(db, item, "created", item.quantity, item.quantity, "Pradinė pozicija");
     return json({ item }, 201);
   }
@@ -115,12 +128,23 @@ async function handler(request, env) {
   if (itemMatch && method === "PUT") {
     if (!isAdmin) return json({ error: "Šį veiksmą gali atlikti tik administratorius." }, 403);
     const body = await readJson(request);
-    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
+    if (!body || !validText(body.name, 100) || !validText(body.category, 60) || !validText(body.unit, 12) || !validNumber(body.min_quantity) || typeof body.note !== "string" || body.note.length > 250 || typeof (body.product_code ?? "") !== "string" || (body.product_code ?? "").length > 60 || !["none","green","pink","blue","yellow","purple"].includes(body.color || "none")) return json({ error: "Patikrinkite įvestus duomenis." }, 400);
     const existing = await db.prepare("SELECT * FROM items WHERE id = ?").bind(itemMatch[1]).first();
     if (!existing) return json({ error: "Medžiaga nerasta." }, 404);
-    await db.prepare("UPDATE items SET name=?, category=?, unit=?, min_quantity=?, note=?, updated_at=? WHERE id=?")
-      .bind(body.name.trim(), body.category.trim(), body.unit.trim(), body.min_quantity, body.note.trim(), now(), itemMatch[1]).run();
+    await db.prepare("UPDATE items SET product_code=?, color=?, name=?, category=?, unit=?, min_quantity=?, note=?, updated_at=? WHERE id=?")
+      .bind((body.product_code || "").trim(), body.color || "none", body.name.trim(), body.category.trim(), body.unit.trim(), body.min_quantity, body.note.trim(), now(), itemMatch[1]).run();
     return json({ ok: true });
+  }
+  const scanMatch = path.match(/^items\/([0-9a-f-]+)\/scan$/i);
+  if (scanMatch && method === "POST") {
+    if (!isAdmin) return json({ error: "Nurašymui reikia administratoriaus prisijungimo." }, 401);
+    const item = await db.prepare("SELECT * FROM items WHERE id = ?").bind(scanMatch[1]).first();
+    if (!item) return json({ error: "Medžiaga nerasta." }, 404);
+    if (Number(item.quantity) < 1) return json({ error: "Likutis jau yra 0. Nurašyti negalima." }, 400);
+    const after = Number(item.quantity) - 1;
+    await db.prepare("UPDATE items SET quantity=?, updated_at=? WHERE id=?").bind(after, now(), item.id).run();
+    await logMovement(db, item, "remove", 1, after, "Nurašyta nuskenavus QR kodą");
+    return json({ ok: true, item: item.name, quantity: after, unit: item.unit });
   }
   const movementMatch = path.match(/^items\/([0-9a-f-]+)\/movement$/i);
   if (movementMatch && method === "POST") {

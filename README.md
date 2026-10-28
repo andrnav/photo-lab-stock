@@ -1,29 +1,22 @@
 # Photo Lab Stock
 
-Bendra foto laboratorijos medžiagų likučių aplikacija: HTML/CSS/JavaScript, Cloudflare Pages Functions ir Cloudflare D1.
+Inventory web app for Cloudflare Pages Functions + D1.
 
-## Kas atnaujinta
+## Features
+- Public read-only inventory and movement history.
+- Admin-only item creation, editing and stock movements.
+- Product code and optional color label for each item.
+- Inventory sorted alphabetically by item name.
+- QR code per item. Scanning the QR opens the inventory URL and deducts one unit only after the administrator is authenticated. If the administrator is not logged in, the app asks for admin login first.
+- Existing D1 databases are upgraded automatically: the API adds `product_code` and `color` columns if missing. Do not rerun `schema.sql` on an existing database.
 
-- Lankytojai iškart mato likučius ir pakeitimų istoriją be prisijungimo.
-- Tik `admin` turi prisijungti, kad galėtų pridėti medžiagas, keisti likučius ir redaguoti minimalius likučius. API tikrina teises serverio pusėje.
-- „Užsakomos medžiagos“ visada rodoma viršuje; joje rodomos pozicijos, kurių kiekis yra lygus minimaliam arba mažesnis. Jei tokių nėra, rodoma „Šiuo metu užsakomų medžiagų nėra.“
-- „Visos medžiagos“ visada rodoma žemiau. Paieška ir kategorijų filtras veikia abiejose skiltyse.
-- Esama D1 duomenų bazės struktūra nekeičiama, todėl nereikia iš naujo vykdyti `schema.sql` ir nereikėtų prarasti esamų likučių.
+## Cloudflare setup
+Required bindings/secrets:
+- D1 database binding named `DB`
+- Secret `APP_PASSWORD` for the `admin` account
+- Secret `SESSION_SECRET` (long random secret)
 
-## Cloudflare nustatymai
+Deploy as a Cloudflare Pages project with the `functions/` directory at the repository root. The QR library is loaded from cdnjs, so QR generation requires internet access in the browser.
 
-Esamus `APP_PASSWORD` ir `SESSION_SECRET` palikite tokius, kokie yra. Papildomo `VIEWER_PASSWORD` nebereikia. Viešam likučių skaitymui prisijungimas nereikalingas, o administratoriaus vardas yra `admin`; jo slaptažodis nustatomas per `APP_PASSWORD`.
-
-Slaptažodžių reikšmių nedėkite į GitHub ir nesiųskite jų pokalbyje. Cloudflare Pages Functions pasiekia slaptas reikšmes per `context.env`; po bindingų ar secrets pakeitimų reikia naujo deployment. Žr. [Cloudflare Pages Functions bindings dokumentaciją](https://developers.cloudflare.com/pages/functions/bindings/).
-
-## Failai
-
-- `index.html` – puslapio struktūra ir dialogai.
-- `styles.css` – dizainas ir prisitaikymas prie telefono.
-- `app.js` – prisijungimas, lentelės ir naršyklės logika.
-- `functions/api/[[path]].js` – API, sesijos ir serverio teisių tikrinimas.
-- `schema.sql` – pradinė D1 duomenų bazės schema (esamai duomenų bazei iš naujo nevykdyti).
-
-## Diegimas
-
-Įkelkite pakeistus failus į esamą GitHub repozitoriją, nekeisdami Cloudflare projekto ar D1 duomenų bazės. Automatinis deployment turėtų prasidėti po commit. Patikrinkite, kad Production aplinkoje būtų `APP_PASSWORD`, `SESSION_SECRET` ir D1 binding vardu `DB`.
+## QR stock deduction
+An admin can click **QR kodas** next to an item and print the QR. Scanning it with the iPhone camera opens the site. If the browser has an active admin session, one unit is deducted immediately and the change is logged. Otherwise, the admin must log in first. Do not share the admin login with visitors; QR links do not bypass server-side authorization.

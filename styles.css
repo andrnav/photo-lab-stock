@@ -36,3 +36,12 @@ td{font-size:12px}
   .admin-access-title{margin-bottom:9px}
   .topbar h1{font-size:27px}
 }
+
+/* Product identifiers, paper-type colors, and QR labels */
+.product-code{display:inline-block;background:#0b1420;border:1px solid #2b394d;color:#c6d7e8;border-radius:6px;padding:5px 7px;font-size:11px;font-weight:750;letter-spacing:.2px}
+.name-with-color{display:flex;align-items:center;gap:9px}
+.color-dot{display:inline-block;flex:0 0 11px;width:11px;height:11px;border-radius:50%;box-shadow:0 0 0 3px #ffffff0b}
+.color-dot.green{background:#46c887}.color-dot.pink{background:#f08ab7}.color-dot.blue{background:#5aa9ff}.color-dot.yellow{background:#f2c94c}.color-dot.purple{background:#b49aff}
+.row-actions{flex-wrap:wrap;min-width:225px}.mini-btn[data-qr]{color:#b8c8ff}
+.qr-content>.muted{font-size:13px;margin:0 0 16px}.qr-code{min-height:230px;display:grid;place-items:center;background:#fff;border-radius:12px;padding:10px;width:240px;max-width:100%;margin:16px auto}.qr-code img,.qr-code canvas{max-width:100%;height:auto}.qr-label{text-align:center;color:#dce5f1;font-size:12px;font-weight:700;overflow-wrap:anywhere}.qr-content .dialog-actions{justify-content:center}
+@media(max-width:650px){.row-actions{min-width:220px}.product-code{font-size:10px}}
