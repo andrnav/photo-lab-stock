@@ -4,21 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <title>Photo Lab Stock</title>
+  <title>Labaratorija v1.00</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
   <div id="app" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand-row"><div class="brand-mark small">PL</div><div><strong>Photo Lab</strong><small>STOCK MANAGER</small></div></div>
+      <div class="brand-row"><div class="brand-mark small">FP</div><div><strong>Labaratorija</strong><small>Foto medžiagų likučiai</small></div></div>
       <nav><a class="nav-item active" href="#inventory"><span>▦</span> Likučiai</a><a class="nav-item" href="#history"><span>↻</span> Pakeitimų istorija</a></nav>
       <div class="sidebar-bottom">
         <div class="admin-access">
           <div class="admin-access-title"><span class="status-dot"></span><strong id="user-label">Vieša peržiūra</strong></div>
           <button id="admin-login-toggle" class="btn secondary full" type="button">Administratoriaus prisijungimas</button>
           <form id="login-form" class="sidebar-login hidden">
-            <label for="username">Naudotojo vardas</label>
+            <label for="username">Vartotojo vardas</label>
             <input id="username" autocomplete="username" required value="admin" placeholder="admin">
             <label for="password">Slaptažodis</label>
             <input id="password" type="password" autocomplete="current-password" required placeholder="Administratoriaus slaptažodis">
@@ -31,7 +31,7 @@
     </aside>
 
     <main class="main-content">
-      <header class="topbar"><div><p class="eyebrow">DARBO ERDVĖ / SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><p id="lithuania-clock" class="lithuania-clock" aria-live="off">Lietuvos laikas: tikrinama…</p><div class="top-action-buttons"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="theme-toggle" class="btn secondary" type="button" aria-label="Keisti dienos ir nakties režimą">☾ Naktis</button><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></div></header>
+      <header class="topbar"><div><p class="eyebrow">SANDĖLIS</p><h1>Medžiagų likučiai</h1><p class="muted" id="last-updated">Paskutinį kartą atnaujinta: tikrinama…</p></div><div class="top-actions"><p id="lithuania-clock" class="lithuania-clock" aria-live="off">Lietuvos laikas: tikrinama…</p><div class="top-action-buttons"><span id="sync-status" class="sync-pill"><i></i> Prisijungta</span><button id="theme-toggle" class="btn secondary" type="button" aria-label="Keisti dienos ir nakties režimą">☾ Naktis</button><button id="refresh-btn" class="btn secondary">↻ Atnaujinti</button></div></div></header>
 
 
       <section class="stats-grid stats-grid-single">
